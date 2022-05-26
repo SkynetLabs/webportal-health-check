@@ -24,7 +24,7 @@
   "scripts": {
     "lint": "yarn prettier --check .",
     "format": "yarn prettier --write .",
-    "test": "echo 'Warning: no test script specified'",
+    "test": "yarn jest",
     "build": "echo 'Warning: no build script specified'"
   }
 }
