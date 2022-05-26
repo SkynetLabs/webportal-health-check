@@ -20,5 +20,11 @@
   "devDependencies": {
     "jest": "^28.0.3",
     "prettier": "^2.6.2"
+  },
+  "scripts": {
+    "lint": "yarn prettier --check .",
+    "format": "yarn prettier --write .",
+    "test": "echo 'Warning: no test script specified'",
+    "build": "echo 'Warning: no build script specified'"
   }
 }
