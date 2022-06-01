@@ -1,5 +1,5 @@
-[![Release](https://github.com/SkynetLabs/webportal-health-checks/actions/workflows/ci_release.yml/badge.svg)](https://github.com/SkynetLabs/webportal-health-checks/actions/workflows/ci_release.yml)
-[![CodeQL](https://github.com/SkynetLabs/webportal-health-checks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SkynetLabs/webportal-health-checks/actions/workflows/codeql-analysis.yml)
+[![Release](https://github.com/SkynetLabs/webportal-health-check/actions/workflows/ci_release.yml/badge.svg)](https://github.com/SkynetLabs/webportal-health-check/actions/workflows/ci_release.yml)
+[![CodeQL](https://github.com/SkynetLabs/webportal-health-check/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SkynetLabs/webportal-health-check/actions/workflows/codeql-analysis.yml)
 
 # Webportal Health Check
 
