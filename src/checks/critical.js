@@ -9,6 +9,11 @@ const MODULE_BLOCKER = "b";
 const skynetClient = new SkynetClient(`https://${process.env.PORTAL_DOMAIN}`);
 const exampleSkylink = "AACogzrAimYPG42tDOKhS3lXZD8YvlF8Q8R17afe95iV2Q";
 
+// this resolver skylink points to latest release of webportal-website and
+// is updated automatically on each merged pull request via github-actions
+// source: https://github.com/SkynetLabs/webportal-website
+const exampleResolverSkylink = "AQCExZYFmmc75OPgjPpHuF4WVN0pc4FX2p09t4naLKfTLw";
+
 // check that any relevant configuration is properly set in skyd
 async function skydConfigCheck(done) {
   const time = process.hrtime();
@@ -69,10 +74,17 @@ async function websiteCheck(done) {
 }
 
 // downloadCheck returns the result of downloading the hard coded link
-async function downloadCheck(done) {
+async function downloadSkylinkCheck(done) {
   const url = await skynetClient.getSkylinkUrl(exampleSkylink);
 
   return done(await genericAccessCheck("skylink", url));
+}
+
+// downloadResolverSkylinkCheck returns the result of downloading an example resolver skylink
+async function downloadResolverSkylinkCheck(done) {
+  const url = await skynetClient.getSkylinkUrl(exampleResolverSkylink);
+
+  return done(await genericAccessCheck("resolver_skylink", url));
 }
 
 // skylinkSubdomainCheck returns the result of downloading the hard coded link via subdomain
@@ -221,7 +233,8 @@ const checks = [
   skydConfigCheck,
   uploadCheck,
   websiteCheck,
-  downloadCheck,
+  downloadSkylinkCheck,
+  downloadResolverSkylinkCheck,
   skylinkSubdomainCheck,
   handshakeSubdomainCheck,
   registryWriteAndReadCheck,
