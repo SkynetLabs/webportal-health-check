@@ -23,15 +23,47 @@ async function skydConfigCheck(done) {
     }
 
     data.up = true;
-    data.ip = response.ip;
   } catch (error) {
     data.statusCode = error.response?.statusCode || error.statusCode || error.status;
     data.errorMessage = error.message;
     data.errorResponseContent = getResponseContent(error.response);
-    data.ip = error?.response?.ip ?? null;
   }
 
   done({ name: "skyd_config", time: calculateElapsedTime(time), ...data });
+}
+
+// check skyd for total number of workers on cooldown
+async function skydWorkersCooldownCheck(done) {
+  const workersCooldownThreshold = 0.6; // set to 60% initially, can be increased later
+  const time = process.hrtime();
+  const data = { up: false };
+
+  try {
+    const response = await got(`http://10.10.10.10:9980/renter/workers`, {
+      headers: { "User-Agent": "Sia-Agent" },
+    }).json();
+
+    const workersCooldown =
+      response.totaldownloadcooldown + response.totalmaintenancecooldown + response.totaluploadcooldown;
+    const workersCooldownRatio = workersCooldown / response.numworkers;
+
+    if (workersCooldownRatio > workersCooldownThreshold) {
+      const workersCooldownPercentage = Math.floor(workersCooldownRatio * 100);
+      const workersCooldownThresholdPercentage = Math.floor(workersCooldownThreshold * 100);
+
+      throw new Error(
+        `${workersCooldown}/${response.numworkers} skyd workers on cooldown (current ${workersCooldownPercentage}%, threshold ${workersCooldownThresholdPercentage}%)`
+      );
+    }
+
+    data.up = true;
+  } catch (error) {
+    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
+    data.errorMessage = error.message;
+    data.errorResponseContent = getResponseContent(error.response);
+  }
+
+  done({ name: "skyd_renter_workers", time: calculateElapsedTime(time), ...data });
 }
 
 // uploadCheck returns the result of uploading a sample file
@@ -219,6 +251,7 @@ async function genericAccessCheck(name, url) {
 
 const checks = [
   skydConfigCheck,
+  skydWorkersCooldownCheck,
   uploadCheck,
   websiteCheck,
   downloadCheck,
