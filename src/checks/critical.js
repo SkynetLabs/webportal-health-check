@@ -73,7 +73,7 @@ async function websiteCheck(done) {
   return done(await genericAccessCheck("website", `https://${process.env.PORTAL_DOMAIN}`));
 }
 
-// downloadCheck returns the result of downloading the hard coded link
+// downloadSkylinkCheck returns the result of downloading the hard coded link
 async function downloadSkylinkCheck(done) {
   const url = await skynetClient.getSkylinkUrl(exampleSkylink);
 
