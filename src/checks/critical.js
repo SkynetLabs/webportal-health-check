@@ -1,3 +1,4 @@
+const util = require("node:util");
 const got = require("got");
 const FormData = require("form-data");
 const { isEqual } = require("lodash");
@@ -23,15 +24,47 @@ async function skydConfigCheck(done) {
     }
 
     data.up = true;
-    data.ip = response.ip;
   } catch (error) {
     data.statusCode = error.response?.statusCode || error.statusCode || error.status;
     data.errorMessage = error.message;
     data.errorResponseContent = getResponseContent(error.response);
-    data.ip = error?.response?.ip ?? null;
   }
 
   done({ name: "skyd_config", time: calculateElapsedTime(time), ...data });
+}
+
+// check skyd for total number of workers on cooldown
+async function skydWorkersCooldownCheck(done) {
+  const workersCooldownThreshold = 0.6; // set to 60% initially, can be increased later
+  const time = process.hrtime();
+  const data = { up: false };
+
+  try {
+    const response = await got(`http://10.10.10.10:9980/renter/workers`, {
+      headers: { "User-Agent": "Sia-Agent" },
+    }).json();
+
+    const workersCooldown =
+      response.totaldownloadcooldown + response.totalmaintenancecooldown + response.totaluploadcooldown;
+    const workersCooldownRatio = workersCooldown / response.numworkers;
+
+    if (workersCooldownRatio > workersCooldownThreshold) {
+      const workersCooldownPercentage = Math.floor(workersCooldownRatio * 100);
+      const workersCooldownThresholdPercentage = Math.floor(workersCooldownThreshold * 100);
+
+      throw new Error(
+        `${workersCooldown}/${response.numworkers} skyd workers on cooldown (current ${workersCooldownPercentage}%, threshold ${workersCooldownThresholdPercentage}%)`
+      );
+    }
+
+    data.up = true;
+  } catch (error) {
+    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
+    data.errorMessage = error.message;
+    data.errorResponseContent = getResponseContent(error.response);
+  }
+
+  done({ name: "skyd_renter_workers", time: calculateElapsedTime(time), ...data });
 }
 
 // uploadCheck returns the result of uploading a sample file
@@ -111,7 +144,15 @@ async function registryWriteAndReadCheck(done) {
     if (isEqual(expected, entry)) {
       data.up = true;
     } else {
-      data.errors = [{ message: "Data mismatch in registry (read after write)", entry, expected }];
+      data.errors = [
+        {
+          message: "Data mismatch in registry (read after write)",
+          // use util.inspect to serialize the entries, otherwise built in JSON.stringify will throw error
+          // on revision being BigInt (unsupported) and data will not be printed properly as Uint8Array
+          received: util.inspect(entry, { breakLength: Infinity, compact: true }),
+          expected: util.inspect(expected, { breakLength: Infinity, compact: true }),
+        },
+      ];
     }
   } catch (error) {
     data.errors = [{ message: error?.response?.data?.message ?? error.message }];
@@ -219,6 +260,7 @@ async function genericAccessCheck(name, url) {
 
 const checks = [
   skydConfigCheck,
+  skydWorkersCooldownCheck,
   uploadCheck,
   websiteCheck,
   downloadCheck,
