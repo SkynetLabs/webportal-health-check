@@ -1,3 +1,4 @@
+const util = require("node:util");
 const got = require("got");
 const FormData = require("form-data");
 const { isEqual } = require("lodash");
@@ -143,7 +144,15 @@ async function registryWriteAndReadCheck(done) {
     if (isEqual(expected, entry)) {
       data.up = true;
     } else {
-      data.errors = [{ message: "Data mismatch in registry (read after write)", entry, expected }];
+      data.errors = [
+        {
+          message: "Data mismatch in registry (read after write)",
+          // use util.inspect to serialize the entries, otherwise built in JSON.stringify will throw error
+          // on revision being BigInt (unsupported) and data will not be printed properly as Uint8Array
+          received: util.inspect(entry, { breakLength: Infinity, compact: true }),
+          expected: util.inspect(expected, { breakLength: Infinity, compact: true }),
+        },
+      ];
     }
   } catch (error) {
     data.errors = [{ message: error?.response?.data?.message ?? error.message }];
