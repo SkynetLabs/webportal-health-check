@@ -138,10 +138,10 @@ function isPortalModuleEnabled(module) {
  * - DENY_PUBLIC_ACCESS env variable is set to true (server on takedown)
  */
 function getDisabledServerReason(manualDisabledReason) {
-  const accessDeniedReason = "Server public access denied"; // generic reason message
-
   // check if a flag that indicates that server should disable public traffic is enabled
   if (process.env.DENY_PUBLIC_ACCESS === "true") {
+    const accessDeniedReason = "Server public access denied"; // generic reason message
+
     // include manual disable reason if server has been manually disabled
     return manualDisabledReason ? `${manualDisabledReason} & ${accessDeniedReason}` : accessDeniedReason;
   }
