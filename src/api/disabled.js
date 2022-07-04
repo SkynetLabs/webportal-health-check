@@ -5,5 +5,5 @@ const { getDisabledServerReason } = require("../utils");
 module.exports = (req, res) => {
   const manualDisabledReason = db.get("disabled").value();
 
-  return getDisabledServerReason(manualDisabledReason);
+  res.send({ disabled: getDisabledServerReason(manualDisabledReason) });
 };
