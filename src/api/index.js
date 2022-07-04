@@ -1,6 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const { sum, sumBy } = require("lodash");
 const db = require("../db");
+const { getDisabledServerReason } = require("../utils");
 
 /**
  * Get status code that should be returned in the API response.
@@ -54,7 +55,9 @@ function getMostRecentCriticalEntry() {
  * Get the disabled flag state (manual portal disable)
  */
 function getDisabled() {
-  return db.get("disabled").value();
+  const manualDisabledReason = db.get("disabled").value();
+
+  return getDisabledServerReason(manualDisabledReason);
 }
 
 module.exports = (req, res) => {

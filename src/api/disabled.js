@@ -1,8 +1,9 @@
 const db = require("../db");
+const { getDisabledServerReason } = require("../utils");
 
 // returns a disabled flag status
 module.exports = (req, res) => {
-  const disabled = db.get("disabled").value();
+  const manualDisabledReason = db.get("disabled").value();
 
-  res.send({ disabled });
+  return getDisabledServerReason(manualDisabledReason);
 };

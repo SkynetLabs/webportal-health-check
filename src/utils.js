@@ -132,6 +132,23 @@ function isPortalModuleEnabled(module) {
   return process.env.PORTAL_MODULES && process.env.PORTAL_MODULES.indexOf(module) !== -1;
 }
 
+/**
+ * Compute and generate a message indicating a disabled server. Server is disabled when either:
+ * - disable reason is set manually (non empty)
+ * - DENY_PUBLIC_ACCESS env variable is set to true (server on takedown)
+ */
+function getDisabledServerReason(manualDisabledReason) {
+  const accessDeniedReason = "Server public access denied"; // generic reason message
+
+  // check if a flag that indicates that server should disable public traffic is enabled
+  if (process.env.DENY_PUBLIC_ACCESS === "true") {
+    // include manual disable reason if server has been manually disabled
+    return manualDisabledReason ? `${manualDisabledReason} & ${accessDeniedReason}` : accessDeniedReason;
+  }
+
+  return manualDisabledReason;
+}
+
 module.exports = {
   calculateElapsedTime,
   getYesterdayISOString,
@@ -139,6 +156,7 @@ module.exports = {
   ensureValidJSON,
   getAuthCookie,
   isPortalModuleEnabled,
+  getDisabledServerReason,
   ipCheckService,
   ipRegex,
 };
