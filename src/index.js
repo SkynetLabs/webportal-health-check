@@ -34,6 +34,7 @@ server.get("/health-check", require("./api/index"));
 server.get("/health-check/critical", require("./api/critical"));
 server.get("/health-check/extended", require("./api/extended"));
 server.get("/health-check/disabled", require("./api/disabled"));
+server.get("/health-check/whatismyip", require("./api/whatismyip"));
 
 server.listen(port, host, (error) => {
   if (error) throw error;
