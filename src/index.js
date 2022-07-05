@@ -30,11 +30,13 @@ server.use((req, res, next) => {
   next();
 });
 
+// exposed in nginx (public api)
 server.get("/health-check", require("./api/index"));
 server.get("/health-check/critical", require("./api/critical"));
 server.get("/health-check/extended", require("./api/extended"));
 server.get("/health-check/disabled", require("./api/disabled"));
-server.get("/health-check/whatismyip", require("./api/whatismyip"));
+// not exposed in nginx (protected api)
+server.get("/whatismyip", require("./api/whatismyip"));
 
 server.listen(port, host, (error) => {
   if (error) throw error;
