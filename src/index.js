@@ -1,16 +1,17 @@
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
+// when portal domain is not provided
 if (!process.env.PORTAL_DOMAIN) {
-  throw new Error("You need to provide PORTAL_DOMAIN environment variable");
+  throw new Error("PORTAL_DOMAIN environment variable cannot be empty");
 }
 
+// when accounts module is enabled
 if (process.env.ACCOUNTS_ENABLED === "true") {
+  // when portal is set to allow only authenticated requests
   if (["authenticated", "subscription"].includes(process.env.ACCOUNTS_LIMIT_ACCESS)) {
-    if (!process.env.ACCOUNTS_TEST_USER_EMAIL) {
-      throw new Error("ACCOUNTS_TEST_USER_EMAIL cannot be empty");
-    }
-    if (!process.env.ACCOUNTS_TEST_USER_PASSWORD) {
-      throw new Error("ACCOUNTS_TEST_USER_PASSWORD cannot be empty");
+    // when test api key is not provided
+    if (!process.env.ACCOUNTS_TEST_USER_API_KEY) {
+      throw new Error("ACCOUNTS_TEST_USER_API_KEY environment variable cannot be empty");
     }
   }
 }

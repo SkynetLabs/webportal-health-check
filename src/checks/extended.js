@@ -2,7 +2,7 @@ const got = require("got");
 const hasha = require("hasha");
 const { detailedDiff } = require("deep-object-diff");
 const { isEqual } = require("lodash");
-const { calculateElapsedTime, ensureValidJSON, getResponseContent, getAuthCookie } = require("../utils");
+const { calculateElapsedTime, ensureValidJSON, getResponseContent } = require("../utils");
 const { parseSkylink } = require("skynet-js");
 
 // audioExampleCheck returns the result of trying to download the skylink
@@ -1130,13 +1130,15 @@ function parseHeaderString(header) {
 
 // skylinkVerification verifies a skylink against provided information.
 async function skylinkVerification(done, expected, { followRedirect = true, method = "get" } = {}) {
-  const authCookie = await getAuthCookie();
   const time = process.hrtime();
   const details = { name: expected.name, skylink: expected.skylink };
 
   try {
     const query = `https://${process.env.PORTAL_DOMAIN}/${expected.skylink}`;
-    const response = await got[method](query, { followRedirect, headers: { cookie: `nocache=true;${authCookie}` } });
+    const response = await got[method](query, {
+      followRedirect,
+      headers: { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY },
+    });
     const entry = { ...details, up: true, statusCode: response.statusCode, time: calculateElapsedTime(time) };
     const info = {};
 
@@ -1173,7 +1175,9 @@ async function skylinkVerification(done, expected, { followRedirect = true, meth
       const skylink = parseSkylink(expected.skylink);
       const url = `https://${process.env.PORTAL_DOMAIN}/skynet/metadata/${skylink}`;
       try {
-        const metadata = await got(url, { headers: { cookie: `nocache=true;${authCookie}` } }).json();
+        const metadata = await got(url, {
+          headers: { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY },
+        }).json();
         if (!isEqual(expected.metadata, metadata)) {
           entry.up = false;
           info.metadata = { url, diff: ensureValidJSON(detailedDiff(expected.metadata, metadata)) };
