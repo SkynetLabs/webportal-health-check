@@ -201,7 +201,7 @@ async function directServerApiAccessCheck(done) {
 }
 
 // accountHealthCheck returns the result of accounts service health checks
-async function accountHealthCheck(done) {
+async function accountHealthCheck(done, retries = 2) {
   const time = process.hrtime();
   const data = { up: false };
 
@@ -219,11 +219,16 @@ async function accountHealthCheck(done) {
     data.ip = error?.response?.ip ?? null;
   }
 
-  done({ name: "accounts", time: calculateElapsedTime(time), ...data });
+  // db checks can be a false negative due to slow network, retry to make sure it is actually down
+  if (data.up === false && retries > 0) {
+    setTimeout(() => accountHealthCheck(done, retries - 1), 3000); // delay 3 seconds and retry
+  } else {
+    done({ name: "accounts", time: calculateElapsedTime(time), ...data });
+  }
 }
 
 // blockerHealthCheck returns the result of blocker container health endpoint
-async function blockerHealthCheck(done) {
+async function blockerHealthCheck(done, retries = 2) {
   const time = process.hrtime();
   const data = { up: false };
 
@@ -241,12 +246,12 @@ async function blockerHealthCheck(done) {
     data.errorResponseContent = getResponseContent(error.response);
   }
 
-  // this is a no-op but it's added to explicitly document the ip property
-  // should not be set on the data object to prevent the IP from being compared
-  // to the server's IP - this is not required for this check and will fail
-  delete data.ip;
-
-  done({ name: "blocker", time: calculateElapsedTime(time), ...data });
+  // db checks can be a false negative due to slow network, retry to make sure it is actually down
+  if (data.up === false && retries > 0) {
+    setTimeout(() => blockerHealthCheck(done, retries - 1), 3000); // delay 3 seconds and retry
+  } else {
+    done({ name: "blocker", time: calculateElapsedTime(time), ...data });
+  }
 }
 
 async function genericAccessCheck(name, url) {
