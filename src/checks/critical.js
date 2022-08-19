@@ -4,7 +4,7 @@ const FormData = require("form-data");
 const { isEqual } = require("lodash");
 const tus = require("tus-js-client");
 const { calculateElapsedTime, getResponseContent, isPortalModuleEnabled } = require("../utils");
-const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("@skynetlabs/skynet-nodejs");
+const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("skynet-js");
 
 const MODULE_BLOCKER = "b";
 
@@ -24,7 +24,10 @@ async function skydConfigCheck(done) {
   const data = { up: false };
 
   try {
-    const response = await got(`http://10.10.10.10:9980/renter`, { headers: { "User-Agent": "Sia-Agent" } }).json();
+    const response = await got(`http://10.10.10.10:9980/renter`, {
+      headers: { "User-Agent": "Sia-Agent" },
+      timeout: { connect: 5000 }, // timeout after 5 seconds when skyd is not available
+    }).json();
 
     // make sure initial funding is set to 10SC
     if (response.settings.allowance.paymentcontractinitialfunding !== "10000000000000000000000000") {
@@ -50,6 +53,7 @@ async function skydWorkersCooldownCheck(done) {
   try {
     const response = await got(`http://10.10.10.10:9980/renter/workers`, {
       headers: { "User-Agent": "Sia-Agent" },
+      timeout: { connect: 5000 }, // timeout after 5 seconds when skyd is not available
     }).json();
 
     const workersCooldown =
