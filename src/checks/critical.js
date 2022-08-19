@@ -4,7 +4,7 @@ const FormData = require("form-data");
 const { isEqual } = require("lodash");
 const tus = require("tus-js-client");
 const { calculateElapsedTime, getResponseContent, isPortalModuleEnabled } = require("../utils");
-const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("skynet-js");
+const { SkynetClient, genKeyPairAndSeed } = require("skynet-js");
 
 const MODULE_BLOCKER = "b";
 
@@ -12,6 +12,7 @@ const skynetClient = new SkynetClient(`https://${process.env.PORTAL_DOMAIN}`, {
   skynetApiKey: process.env.ACCOUNTS_TEST_USER_API_KEY,
 });
 const exampleSkylink = "AACogzrAimYPG42tDOKhS3lXZD8YvlF8Q8R17afe95iV2Q";
+const exampleSkylinkBase32 = "000ah0pqo256c3orhmmgpol19dslep1v32v52v23ohqur9uuuuc9bm8";
 
 // this resolver skylink points to latest release of webportal-website and
 // is updated automatically on each merged pull request via github-actions
@@ -147,28 +148,28 @@ async function websiteCheck(done) {
 
 // downloadSkylinkCheck returns the result of downloading the hard coded link
 async function downloadSkylinkCheck(done) {
-  const url = await skynetClient.getSkylinkUrl(exampleSkylink);
+  const url = `https://${process.env.PORTAL_DOMAIN}/${exampleSkylink}`;
 
   return done(await genericAccessCheck("skylink", url));
 }
 
 // downloadResolverSkylinkCheck returns the result of downloading an example resolver skylink
 async function downloadResolverSkylinkCheck(done) {
-  const url = await skynetClient.getSkylinkUrl(exampleResolverSkylink);
+  const url = `https://${process.env.PORTAL_DOMAIN}/${exampleResolverSkylink}`;
 
   return done(await genericAccessCheck("resolver_skylink", url));
 }
 
 // skylinkSubdomainCheck returns the result of downloading the hard coded link via subdomain
 async function skylinkSubdomainCheck(done) {
-  const url = await skynetClient.getSkylinkUrl(exampleSkylink, { subdomain: true });
+  const url = `https://${exampleSkylinkBase32}.${process.env.PORTAL_DOMAIN}`;
 
   return done(await genericAccessCheck("skylink_via_subdomain", url));
 }
 
 // handshakeSubdomainCheck returns the result of downloading the skylink via handshake domain
 async function handshakeSubdomainCheck(done) {
-  const url = await skynetClient.getHnsUrl("note-to-self", { subdomain: true });
+  const url = `https://note-to-self.hns.${process.env.PORTAL_DOMAIN}`;
 
   return done(await genericAccessCheck("hns_via_subdomain", url));
 }
@@ -185,7 +186,7 @@ async function registryWriteAndReadCheck(done) {
   const time = process.hrtime();
   const data = { name: "registry_write_and_read", up: false };
   const { privateKey, publicKey } = genKeyPairAndSeed();
-  const expected = { dataKey: "foo-key", data: stringToUint8ArrayUtf8("foo-data"), revision: BigInt(0) };
+  const expected = { dataKey: "foo-key", data: Uint8Array.from(Buffer.from("foo-data", "utf-8")), revision: BigInt(0) };
 
   try {
     await skynetClient.registry.setEntry(privateKey, expected);
