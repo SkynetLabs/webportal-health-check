@@ -102,6 +102,27 @@ async function uploadCheck(done) {
   done({ name: "upload_file", time: calculateElapsedTime(time), ...data });
 }
 
+// uploadTusCheck returns the result of uploading a sample file through tus endpoint
+async function uploadTusCheck(done) {
+  const time = process.hrtime();
+  const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
+  const data = { up: false };
+
+  try {
+    // set large file size to 0 to force using tus endpoint
+    await skynetClient.uploadData(payload, "date.txt", { largeFileSize: 0 });
+
+    data.up = true;
+  } catch (error) {
+    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
+    data.errorMessage = error.message;
+    data.errorResponseContent = getResponseContent(error.response);
+    data.ip = error?.response?.ip ?? null;
+  }
+
+  done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data });
+}
+
 // websiteCheck checks whether the main website is working
 async function websiteCheck(done) {
   return done(await genericAccessCheck("website", `https://${process.env.PORTAL_DOMAIN}`));
@@ -278,6 +299,7 @@ const checks = [
   skydConfigCheck,
   skydWorkersCooldownCheck,
   uploadCheck,
+  uploadTusCheck,
   websiteCheck,
   downloadSkylinkCheck,
   downloadResolverSkylinkCheck,
