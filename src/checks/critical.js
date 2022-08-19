@@ -3,7 +3,7 @@ const got = require("got");
 const FormData = require("form-data");
 const { isEqual } = require("lodash");
 const { calculateElapsedTime, getResponseContent, isPortalModuleEnabled } = require("../utils");
-const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("skynet-js");
+const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("@skynetlabs/skynet-nodejs");
 
 const MODULE_BLOCKER = "b";
 

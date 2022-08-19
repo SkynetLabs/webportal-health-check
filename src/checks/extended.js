@@ -3,7 +3,7 @@ const hasha = require("hasha");
 const { detailedDiff } = require("deep-object-diff");
 const { isEqual } = require("lodash");
 const { calculateElapsedTime, ensureValidJSON, getResponseContent } = require("../utils");
-const { parseSkylink } = require("skynet-js");
+const { parseSkylink } = require("@skynetlabs/skynet-nodejs");
 
 // audioExampleCheck returns the result of trying to download the skylink
 // for the Example audio file on siasky.net

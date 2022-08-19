@@ -693,6 +693,18 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@skynetlabs/skynet-nodejs@^2.8.0":
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/@skynetlabs/skynet-nodejs/-/skynet-nodejs-2.8.0.tgz#46972beca4a54bfaa87502663aa89baf828d8055"
+  integrity sha512-kURvVij6hrpcZraqAAZTL4jktjWgwQCSUEqoC1917m0UrlL4nOAP7m6plJevq1OJJKYVf14/F1d9WXinIMOs6g==
+  dependencies:
+    "@skynetlabs/tus-js-client" "^2.4.1"
+    axios "0.27.2"
+    form-data "4.0.0"
+    mime "^3.0.0"
+    skynet-js "^4.3.0"
+    url-join "^4.0.1"
+
 "@skynetlabs/tus-js-client@^2.4.1":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@skynetlabs/tus-js-client/-/tus-js-client-2.4.1.tgz#01e70e8c92fb3ec043b0c7da5206d7b96149c162"
@@ -899,7 +911,7 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha1-x57Zf380y48robyXkLzDZkdLS3k=
 
-axios@^0.27.2:
+axios@0.27.2, axios@^0.27.2:
   version "0.27.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.27.2.tgz#207658cc8621606e586c85db4b41a750e756d972"
   integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==
@@ -1523,7 +1535,7 @@ follow-redirects@^1.14.9:
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.1.tgz#0ca6a452306c9b276e4d3127483e29575e207ad5"
   integrity sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==
 
-form-data@^4.0.0:
+form-data@4.0.0, form-data@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.0.tgz#93919daeaf361ee529584b9b31664dc12c9fa452"
   integrity sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==
