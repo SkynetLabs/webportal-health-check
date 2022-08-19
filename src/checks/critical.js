@@ -2,8 +2,9 @@ const util = require("node:util");
 const got = require("got");
 const FormData = require("form-data");
 const { isEqual } = require("lodash");
+const tus = require("tus-js-client");
 const { calculateElapsedTime, getResponseContent, isPortalModuleEnabled } = require("../utils");
-const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("skynet-js");
+const { SkynetClient, genKeyPairAndSeed } = require("skynet-js");
 
 const MODULE_BLOCKER = "b";
 
@@ -11,6 +12,7 @@ const skynetClient = new SkynetClient(`https://${process.env.PORTAL_DOMAIN}`, {
   skynetApiKey: process.env.ACCOUNTS_TEST_USER_API_KEY,
 });
 const exampleSkylink = "AACogzrAimYPG42tDOKhS3lXZD8YvlF8Q8R17afe95iV2Q";
+const exampleSkylinkBase32 = "000ah0pqo256c3orhmmgpol19dslep1v32v52v23ohqur9uuuuc9bm8";
 
 // this resolver skylink points to latest release of webportal-website and
 // is updated automatically on each merged pull request via github-actions
@@ -23,7 +25,10 @@ async function skydConfigCheck(done) {
   const data = { up: false };
 
   try {
-    const response = await got(`http://10.10.10.10:9980/renter`, { headers: { "User-Agent": "Sia-Agent" } }).json();
+    const response = await got(`http://10.10.10.10:9980/renter`, {
+      headers: { "User-Agent": "Sia-Agent" },
+      timeout: { connect: 5000 }, // timeout after 5 seconds when skyd is not available
+    }).json();
 
     // make sure initial funding is set to 10SC
     if (response.settings.allowance.paymentcontractinitialfunding !== "10000000000000000000000000") {
@@ -49,6 +54,7 @@ async function skydWorkersCooldownCheck(done) {
   try {
     const response = await got(`http://10.10.10.10:9980/renter/workers`, {
       headers: { "User-Agent": "Sia-Agent" },
+      timeout: { connect: 5000 }, // timeout after 5 seconds when skyd is not available
     }).json();
 
     const workersCooldown =
@@ -102,6 +108,39 @@ async function uploadCheck(done) {
   done({ name: "upload_file", time: calculateElapsedTime(time), ...data });
 }
 
+// uploadTusCheck returns the result of uploading a sample file through tus endpoint
+async function uploadTusCheck(done) {
+  const time = process.hrtime();
+  const headers = { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY ?? "" };
+  const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
+  const data = { up: false };
+
+  try {
+    const upload = new tus.Upload(payload, {
+      endpoint: `https://${process.env.PORTAL_DOMAIN}/skynet/tus`,
+      headers,
+      onError: (error) => {
+        done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data, errorMessage: error.message });
+      },
+      onSuccess: async () => {
+        const response = await got.head(upload.url, { headers });
+        const skylink = response.headers["skynet-skylink"];
+
+        done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data, skylink, up: Boolean(skylink) });
+      },
+    });
+
+    upload.start();
+  } catch (error) {
+    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
+    data.errorMessage = error.message;
+    data.errorResponseContent = getResponseContent(error.response);
+    data.ip = error?.response?.ip ?? null;
+
+    done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data });
+  }
+}
+
 // websiteCheck checks whether the main website is working
 async function websiteCheck(done) {
   return done(await genericAccessCheck("website", `https://${process.env.PORTAL_DOMAIN}`));
@@ -109,28 +148,28 @@ async function websiteCheck(done) {
 
 // downloadSkylinkCheck returns the result of downloading the hard coded link
 async function downloadSkylinkCheck(done) {
-  const url = await skynetClient.getSkylinkUrl(exampleSkylink);
+  const url = `https://${process.env.PORTAL_DOMAIN}/${exampleSkylink}`;
 
   return done(await genericAccessCheck("skylink", url));
 }
 
 // downloadResolverSkylinkCheck returns the result of downloading an example resolver skylink
 async function downloadResolverSkylinkCheck(done) {
-  const url = await skynetClient.getSkylinkUrl(exampleResolverSkylink);
+  const url = `https://${process.env.PORTAL_DOMAIN}/${exampleResolverSkylink}`;
 
   return done(await genericAccessCheck("resolver_skylink", url));
 }
 
 // skylinkSubdomainCheck returns the result of downloading the hard coded link via subdomain
 async function skylinkSubdomainCheck(done) {
-  const url = await skynetClient.getSkylinkUrl(exampleSkylink, { subdomain: true });
+  const url = `https://${exampleSkylinkBase32}.${process.env.PORTAL_DOMAIN}`;
 
   return done(await genericAccessCheck("skylink_via_subdomain", url));
 }
 
 // handshakeSubdomainCheck returns the result of downloading the skylink via handshake domain
 async function handshakeSubdomainCheck(done) {
-  const url = await skynetClient.getHnsUrl("note-to-self", { subdomain: true });
+  const url = `https://note-to-self.hns.${process.env.PORTAL_DOMAIN}`;
 
   return done(await genericAccessCheck("hns_via_subdomain", url));
 }
@@ -147,7 +186,7 @@ async function registryWriteAndReadCheck(done) {
   const time = process.hrtime();
   const data = { name: "registry_write_and_read", up: false };
   const { privateKey, publicKey } = genKeyPairAndSeed();
-  const expected = { dataKey: "foo-key", data: stringToUint8ArrayUtf8("foo-data"), revision: BigInt(0) };
+  const expected = { dataKey: "foo-key", data: Uint8Array.from(Buffer.from("foo-data", "utf-8")), revision: BigInt(0) };
 
   try {
     await skynetClient.registry.setEntry(privateKey, expected);
@@ -278,6 +317,7 @@ const checks = [
   skydConfigCheck,
   skydWorkersCooldownCheck,
   uploadCheck,
+  uploadTusCheck,
   websiteCheck,
   downloadSkylinkCheck,
   downloadResolverSkylinkCheck,

@@ -3,7 +3,6 @@ const hasha = require("hasha");
 const { detailedDiff } = require("deep-object-diff");
 const { isEqual } = require("lodash");
 const { calculateElapsedTime, ensureValidJSON, getResponseContent } = require("../utils");
-const { parseSkylink } = require("skynet-js");
 
 // audioExampleCheck returns the result of trying to download the skylink
 // for the Example audio file on siasky.net
@@ -690,7 +689,7 @@ function pdfExampleCheck(done) {
 function skyBayCheck(done) {
   const linkInfo = {
     name: "SkyBay",
-    skylink: "EABkMjXzxJRpPz0eO0Or5fy2eo-rz3prdigGwRlyNd9mwA/",
+    skylink: "EABkMjXzxJRpPz0eO0Or5fy2eo-rz3prdigGwRlyNd9mwA",
     bodyHash: "dfc0b1d3d1113254d7545d19f6118855ed9c778b",
     metadata: {
       filename: "skybay.html",
@@ -731,7 +730,7 @@ function skyBayRedirectCheck(done) {
 function skyBinCheck(done) {
   const linkInfo = {
     name: "SkyBin",
-    skylink: "CAAVU14pB9GRIqCrejD7rlS27HltGGiiCLICzmrBV0wVtA/",
+    skylink: "CAAVU14pB9GRIqCrejD7rlS27HltGGiiCLICzmrBV0wVtA",
     bodyHash: "858ff733c4cb06a80060b8a62cf303fd5a051651",
     metadata: { filename: "skybin.html" },
     headers: {
@@ -769,7 +768,7 @@ const skyGalleryMetadata = require("../fixtures/skygalleryMetadata.json");
 function skyGalleryCheck(done) {
   const linkInfo = {
     name: "SkyGallery",
-    skylink: "AADW6GsQcetwDBaDYnGCSTbYjSKY743NtY1A5VRx5sj3Dg/",
+    skylink: "AADW6GsQcetwDBaDYnGCSTbYjSKY743NtY1A5VRx5sj3Dg",
     bodyHash: skyGalleryBodyHash,
     metadata: skyGalleryMetadata,
     headers: {
@@ -1172,8 +1171,7 @@ async function skylinkVerification(done, expected, { followRedirect = true, meth
     }
 
     if (expected.metadata && expected.skylink) {
-      const skylink = parseSkylink(expected.skylink);
-      const url = `https://${process.env.PORTAL_DOMAIN}/skynet/metadata/${skylink}`;
+      const url = `https://${process.env.PORTAL_DOMAIN}/skynet/metadata/${expected.skylink}`;
       try {
         const metadata = await got(url, {
           headers: { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY },
