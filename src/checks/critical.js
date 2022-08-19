@@ -2,6 +2,7 @@ const util = require("node:util");
 const got = require("got");
 const FormData = require("form-data");
 const { isEqual } = require("lodash");
+const tus = require("tus-js-client");
 const { calculateElapsedTime, getResponseContent, isPortalModuleEnabled } = require("../utils");
 const { SkynetClient, stringToUint8ArrayUtf8, genKeyPairAndSeed } = require("@skynetlabs/skynet-nodejs");
 
@@ -105,22 +106,34 @@ async function uploadCheck(done) {
 // uploadTusCheck returns the result of uploading a sample file through tus endpoint
 async function uploadTusCheck(done) {
   const time = process.hrtime();
+  const headers = { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY ?? "" };
   const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
   const data = { up: false };
 
   try {
-    // set large file size to 0 to force using tus endpoint
-    await skynetClient.uploadData(payload, "date.txt", { largeFileSize: 0 });
+    const upload = new tus.Upload(payload, {
+      endpoint: `https://${process.env.PORTAL_DOMAIN}/skynet/tus`,
+      headers,
+      onError: (error) => {
+        done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data, errorMessage: error.message });
+      },
+      onSuccess: async () => {
+        const response = await got.head(upload.url, { headers });
+        const skylink = response.headers["skynet-skylink"];
 
-    data.up = true;
+        done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data, skylink, up: Boolean(skylink) });
+      },
+    });
+
+    upload.start();
   } catch (error) {
     data.statusCode = error.response?.statusCode || error.statusCode || error.status;
     data.errorMessage = error.message;
     data.errorResponseContent = getResponseContent(error.response);
     data.ip = error?.response?.ip ?? null;
-  }
 
-  done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data });
+    done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data });
+  }
 }
 
 // websiteCheck checks whether the main website is working
