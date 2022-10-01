@@ -2926,10 +2926,10 @@ tslib@^2.3.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
-tus-js-client@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/tus-js-client/-/tus-js-client-3.0.0.tgz#19d42457bde3bbd2199059672ab86115966b4061"
-  integrity sha512-PHWI/K8YrCzpc83MqkLhqm89EGG+pPrkBaJ/0NQH0xQoqxfs7HKqAqfXrjmcw2CHZeGYaqxI6oVcolXThzYOSA==
+tus-js-client@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/tus-js-client/-/tus-js-client-3.0.1.tgz#d81fea22b8fb23769f973aa49501afef0f97928a"
+  integrity sha512-2EZIUvswv1xG3KtzJO9FZ2wvTtVzltUN23Nse/nZwWE06dbn/8RBeRqi2clV/ilpEomOQOOMdHkIPUQmTum/xg==
   dependencies:
     buffer-from "^1.1.2"
     combine-errors "^3.0.3"
