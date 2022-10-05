@@ -18,7 +18,7 @@ async function executeExtendedCheck(name, expected, config = {}) {
   try {
     const query = `https://${process.env.PORTAL_DOMAIN}/${expected.skylink}`;
     const response = await got[config.method ?? "get"](query, {
-      followRedirect: config.followRedirect ?? false,
+      followRedirect: config.followRedirect ?? true,
       headers: { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY },
     });
 
