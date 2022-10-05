@@ -61,7 +61,8 @@ require("yargs/yargs")(process.argv.slice(2))
 
       const entry = {
         date: new Date().toISOString(),
-        checks: (await Promise.all(checks.map((check) => new Promise(check)))).filter(Boolean).map(middleware),
+        // run all checks, filter empty responses (skipped) and pass the response through the middleware
+        checks: (await Promise.all(checks.map((check) => check()))).filter(Boolean).map(middleware),
       };
 
       db.read() // read before writing to make sure no external changes are overwritten

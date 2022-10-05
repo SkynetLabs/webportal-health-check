@@ -3,14 +3,9 @@ const got = require("got");
 const FormData = require("form-data");
 const { isEqual } = require("lodash");
 const tus = require("tus-js-client");
-const { calculateElapsedTime, getResponseContent, isPortalModuleEnabled } = require("../utils");
-const { SkynetClient, genKeyPairAndSeed } = require("skynet-js");
+const { calculateElapsedTime, getResponseErrorData, isPortalModuleEnabled } = require("../utils");
+const { genKeyPairAndSeed, getRegistryEntry, setRegistryEntry } = require("../utils-registry");
 
-const MODULE_BLOCKER = "b";
-
-const skynetClient = new SkynetClient(`https://${process.env.PORTAL_DOMAIN}`, {
-  skynetApiKey: process.env.ACCOUNTS_TEST_USER_API_KEY,
-});
 const exampleSkylink = "AACogzrAimYPG42tDOKhS3lXZD8YvlF8Q8R17afe95iV2Q";
 const exampleSkylinkBase32 = "000ah0pqo256c3orhmmgpol19dslep1v32v52v23ohqur9uuuuc9bm8";
 
@@ -20,7 +15,7 @@ const exampleSkylinkBase32 = "000ah0pqo256c3orhmmgpol19dslep1v32v52v23ohqur9uuuu
 const exampleResolverSkylink = "AQCExZYFmmc75OPgjPpHuF4WVN0pc4FX2p09t4naLKfTLw";
 
 // check that any relevant configuration is properly set in skyd
-async function skydConfigCheck(done) {
+async function skydConfigCheck() {
   const time = process.hrtime();
   const data = { up: false };
 
@@ -37,16 +32,14 @@ async function skydConfigCheck(done) {
 
     data.up = true;
   } catch (error) {
-    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
   }
 
-  done({ name: "skyd_config", time: calculateElapsedTime(time), ...data });
+  return { name: "skyd_config", time: calculateElapsedTime(time), ...data };
 }
 
 // check skyd for total number of workers on cooldown
-async function skydWorkersCooldownCheck(done) {
+async function skydWorkersCooldownCheck() {
   const workersCooldownThreshold = 0.6; // set to 60% initially, can be increased later
   const time = process.hrtime();
   const data = { up: false };
@@ -72,16 +65,14 @@ async function skydWorkersCooldownCheck(done) {
 
     data.up = true;
   } catch (error) {
-    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
   }
 
-  done({ name: "skyd_renter_workers", time: calculateElapsedTime(time), ...data });
+  return { name: "skyd_renter_workers", time: calculateElapsedTime(time), ...data };
 }
 
 // uploadCheck returns the result of uploading a sample file
-async function uploadCheck(done) {
+async function uploadCheck() {
   const time = process.hrtime();
   const form = new FormData();
   const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
@@ -99,98 +90,95 @@ async function uploadCheck(done) {
     data.up = true;
     data.ip = response.ip;
   } catch (error) {
-    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
-    data.ip = error?.response?.ip ?? null;
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
   }
 
-  done({ name: "upload_file", time: calculateElapsedTime(time), ...data });
+  return { name: "upload_file", time: calculateElapsedTime(time), ...data };
 }
 
 // uploadTusCheck returns the result of uploading a sample file through tus endpoint
-async function uploadTusCheck(done) {
+async function uploadTusCheck() {
   const time = process.hrtime();
   const headers = { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY ?? "" };
   const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
-  const data = { up: false };
+  const data = { name: "upload_file_tus", up: false };
 
   try {
-    const upload = new tus.Upload(payload, {
-      endpoint: `https://${process.env.PORTAL_DOMAIN}/skynet/tus`,
-      headers,
-      onError: (error) => {
-        done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data, errorMessage: error.message });
-      },
-      onSuccess: async () => {
-        const response = await got.head(upload.url, { headers });
-        const skylink = response.headers["skynet-skylink"];
+    return new Promise((resolve, reject) => {
+      const upload = new tus.Upload(payload, {
+        endpoint: `https://${process.env.PORTAL_DOMAIN}/skynet/tus`,
+        headers,
+        onError: (error) => {
+          reject(error); // reject with error to trigger failed check
+        },
+        onSuccess: async () => {
+          const response = await got.head(upload.url, { headers });
+          const skylink = response.headers["skynet-skylink"];
+          resolve({ time: calculateElapsedTime(time), ...data, skylink, up: Boolean(skylink) });
+        },
+      });
 
-        done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data, skylink, up: Boolean(skylink) });
-      },
+      upload.start();
     });
-
-    upload.start();
   } catch (error) {
-    data.statusCode = error.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
-    data.ip = error?.response?.ip ?? null;
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
 
-    done({ name: "upload_file_tus", time: calculateElapsedTime(time), ...data });
+    return { name: "upload_file_tus", time: calculateElapsedTime(time), ...data };
   }
 }
 
 // websiteCheck checks whether the main website is working
-async function websiteCheck(done) {
-  return done(await genericAccessCheck("website", `https://${process.env.PORTAL_DOMAIN}`));
+async function websiteCheck() {
+  return genericAccessCheck("website", `https://${process.env.PORTAL_DOMAIN}`);
 }
 
 // downloadSkylinkCheck returns the result of downloading the hard coded link
-async function downloadSkylinkCheck(done) {
+async function downloadSkylinkCheck() {
   const url = `https://${process.env.PORTAL_DOMAIN}/${exampleSkylink}`;
 
-  return done(await genericAccessCheck("skylink", url));
+  return genericAccessCheck("skylink", url);
 }
 
 // downloadResolverSkylinkCheck returns the result of downloading an example resolver skylink
-async function downloadResolverSkylinkCheck(done) {
+async function downloadResolverSkylinkCheck() {
   const url = `https://${process.env.PORTAL_DOMAIN}/${exampleResolverSkylink}`;
 
-  return done(await genericAccessCheck("resolver_skylink", url));
+  return genericAccessCheck("resolver_skylink", url);
 }
 
 // skylinkSubdomainCheck returns the result of downloading the hard coded link via subdomain
-async function skylinkSubdomainCheck(done) {
+async function skylinkSubdomainCheck() {
   const url = `https://${exampleSkylinkBase32}.${process.env.PORTAL_DOMAIN}`;
 
-  return done(await genericAccessCheck("skylink_via_subdomain", url));
+  return genericAccessCheck("skylink_via_subdomain", url);
 }
 
 // handshakeSubdomainCheck returns the result of downloading the skylink via handshake domain
-async function handshakeSubdomainCheck(done) {
+async function handshakeSubdomainCheck() {
   const url = `https://note-to-self.hns.${process.env.PORTAL_DOMAIN}`;
 
-  return done(await genericAccessCheck("hns_via_subdomain", url));
+  return genericAccessCheck("hns_via_subdomain", url);
 }
 
 // accountWebsiteCheck returns the result of accessing account dashboard website
-async function accountWebsiteCheck(done) {
+async function accountWebsiteCheck() {
+  if (!isPortalModuleEnabled("a")) return; // runs only when accounts are enabled
+
   const url = `https://account.${process.env.PORTAL_DOMAIN}/auth/login`;
 
-  return done(await genericAccessCheck("account_website", url));
+  return genericAccessCheck("account_website", url);
 }
 
 // registryWriteAndReadCheck writes to registry and immediately reads and compares the data
-async function registryWriteAndReadCheck(done) {
+async function registryWriteAndReadCheck() {
   const time = process.hrtime();
   const data = { name: "registry_write_and_read", up: false };
-  const { privateKey, publicKey } = genKeyPairAndSeed();
+  const { privateKey, publicKey } = await genKeyPairAndSeed();
   const expected = { dataKey: "foo-key", data: Uint8Array.from(Buffer.from("foo-data", "utf-8")), revision: BigInt(0) };
 
   try {
-    await skynetClient.registry.setEntry(privateKey, expected);
-    const { entry } = await skynetClient.registry.getEntry(publicKey, expected.dataKey);
+    await setRegistryEntry(privateKey, publicKey, expected);
+    const entry = await getRegistryEntry(publicKey, expected.dataKey);
 
     if (isEqual(expected, entry)) {
       data.up = true;
@@ -206,17 +194,18 @@ async function registryWriteAndReadCheck(done) {
       ];
     }
   } catch (error) {
+    console.log(error?.request?.body?.message);
     data.errors = [{ message: error?.response?.data?.message ?? error.message }];
   }
 
-  return done({ ...data, time: calculateElapsedTime(time) });
+  return { ...data, time: calculateElapsedTime(time) };
 }
 
 // directServerApiAccessCheck returns the basic server api check on direct server address
-async function directServerApiAccessCheck(done) {
+async function directServerApiAccessCheck() {
   // skip if SERVER_DOMAIN is not set or it equals PORTAL_DOMAIN (single server portals)
   if (!process.env.SERVER_DOMAIN || process.env.SERVER_DOMAIN === process.env.PORTAL_DOMAIN) {
-    return done();
+    return;
   }
 
   const [portalAccessCheck, serverAccessCheck] = await Promise.all([
@@ -236,11 +225,13 @@ async function directServerApiAccessCheck(done) {
     });
   }
 
-  return done(serverAccessCheck);
+  return serverAccessCheck;
 }
 
 // accountHealthCheck returns the result of accounts service health checks
-async function accountHealthCheck(done, retries = 2) {
+async function accountHealthCheck(retries = 2) {
+  if (!isPortalModuleEnabled("a")) return; // runs only when accounts are enabled
+
   const time = process.hrtime();
   const data = { up: false };
 
@@ -252,22 +243,21 @@ async function accountHealthCheck(done, retries = 2) {
     data.up = response.body.dbAlive === true;
     data.ip = response.ip;
   } catch (error) {
-    data.statusCode = error?.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
-    data.ip = error?.response?.ip ?? null;
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
   }
 
   // db checks can be a false negative due to slow network, retry to make sure it is actually down
   if (data.up === false && retries > 0) {
-    setTimeout(() => accountHealthCheck(done, retries - 1), 3000); // delay 3 seconds and retry
+    setTimeout(() => accountHealthCheck(retries - 1), 3000); // delay 3 seconds and retry
   } else {
-    done({ name: "accounts", time: calculateElapsedTime(time), ...data });
+    return { name: "accounts", time: calculateElapsedTime(time), ...data };
   }
 }
 
 // blockerHealthCheck returns the result of blocker container health endpoint
-async function blockerHealthCheck(done, retries = 2) {
+async function blockerHealthCheck(retries = 2) {
+  if (!isPortalModuleEnabled("b")) return; // runs only when blocker is enabled
+
   const time = process.hrtime();
   const data = { up: false };
 
@@ -280,16 +270,14 @@ async function blockerHealthCheck(done, retries = 2) {
     data.response = response.body;
     data.up = response.body.dbAlive === true;
   } catch (error) {
-    data.statusCode = error?.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
   }
 
   // db checks can be a false negative due to slow network, retry to make sure it is actually down
   if (data.up === false && retries > 0) {
-    setTimeout(() => blockerHealthCheck(done, retries - 1), 3000); // delay 3 seconds and retry
+    setTimeout(() => blockerHealthCheck(retries - 1), 3000); // delay 3 seconds and retry
   } else {
-    done({ name: "blocker", time: calculateElapsedTime(time), ...data });
+    return { name: "blocker", time: calculateElapsedTime(time), ...data };
   }
 }
 
@@ -304,16 +292,13 @@ async function genericAccessCheck(name, url) {
     data.up = true;
     data.ip = response.ip;
   } catch (error) {
-    data.statusCode = error?.response?.statusCode || error.statusCode || error.status;
-    data.errorMessage = error.message;
-    data.errorResponseContent = getResponseContent(error.response);
-    data.ip = error?.response?.ip ?? null;
+    Object.assign(data, getResponseErrorData(error)); // extend data object with error data
   }
 
   return { name, time: calculateElapsedTime(time), ...data };
 }
 
-const checks = [
+module.exports = [
   skydConfigCheck,
   skydWorkersCooldownCheck,
   uploadCheck,
@@ -325,14 +310,7 @@ const checks = [
   handshakeSubdomainCheck,
   registryWriteAndReadCheck,
   directServerApiAccessCheck,
+  accountHealthCheck,
+  accountWebsiteCheck,
+  blockerHealthCheck,
 ];
-
-if (process.env.ACCOUNTS_ENABLED === "true") {
-  checks.push(accountHealthCheck, accountWebsiteCheck);
-}
-
-if (isPortalModuleEnabled(MODULE_BLOCKER)) {
-  checks.push(blockerHealthCheck);
-}
-
-module.exports = checks;
