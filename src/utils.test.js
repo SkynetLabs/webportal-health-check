@@ -1,5 +1,8 @@
+import { jest } from "@jest/globals";
+import * as utils from "./utils";
+
 describe("ipRegex", () => {
-  const { ipRegex } = require("./utils");
+  const { ipRegex } = utils;
 
   test("should test true for valid ip", () => {
     expect(ipRegex.test("8.8.8.8")).toEqual(true);
@@ -19,7 +22,7 @@ describe("ipRegex", () => {
 });
 
 describe("calculateElapsedTime", () => {
-  const { calculateElapsedTime } = require("./utils");
+  const { calculateElapsedTime } = utils;
 
   test("should calculate elapsed time", () => {
     jest.useFakeTimers();
@@ -33,7 +36,7 @@ describe("calculateElapsedTime", () => {
 });
 
 describe("getYesterdayISOString", () => {
-  const { getYesterdayISOString } = require("./utils");
+  const { getYesterdayISOString } = utils;
 
   test.each([
     ["2020-04-10T13:37:00.000Z", "2020-04-09T13:37:00.000Z"],
@@ -47,7 +50,7 @@ describe("getYesterdayISOString", () => {
 });
 
 describe("getResponseContent", () => {
-  const { getResponseContent } = require("./utils");
+  const { getResponseContent } = utils;
 
   describe("when body property is present", () => {
     test("should try to parse as json", () => {
@@ -87,7 +90,7 @@ describe("getResponseContent", () => {
 });
 
 describe("ensureValidJSON", () => {
-  const { ensureValidJSON } = require("./utils");
+  const { ensureValidJSON } = utils;
 
   test("should replace undefined values with a placeholder", () => {
     const object = { foo: "bar", bar: undefined, fizz: { buzz: [1, undefined, 2] } };
@@ -101,7 +104,7 @@ describe("ensureValidJSON", () => {
 });
 
 describe("isPortalModuleEnabled", () => {
-  const { isPortalModuleEnabled } = require("./utils");
+  const { isPortalModuleEnabled } = utils;
   const PORTAL_MODULES = process.env.PORTAL_MODULES;
 
   beforeEach(() => {
@@ -130,7 +133,7 @@ describe("isPortalModuleEnabled", () => {
 });
 
 describe("getDisabledServerReason", () => {
-  const { getDisabledServerReason } = require("./utils");
+  const { getDisabledServerReason } = utils;
   const DENY_PUBLIC_ACCESS = process.env.DENY_PUBLIC_ACCESS;
 
   beforeEach(() => {
@@ -161,7 +164,7 @@ describe("getDisabledServerReason", () => {
 });
 
 describe("parseHeaderString", () => {
-  const { parseHeaderString } = require("./utils");
+  const { parseHeaderString } = utils;
 
   test("should return an object if string was a stringified object", () => {
     expect(parseHeaderString('{"foo":"bar"}')).toEqual({ foo: "bar" });
@@ -173,7 +176,7 @@ describe("parseHeaderString", () => {
 });
 
 describe("getResponseErrorData", () => {
-  const { getResponseErrorData } = require("./utils");
+  const { getResponseErrorData } = utils;
 
   test("should return an object with certain properties", () => {
     const data = getResponseErrorData(new Error());

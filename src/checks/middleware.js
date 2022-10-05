@@ -1,5 +1,5 @@
-const got = require("got");
-const { ipCheckService, ipRegex } = require("../utils");
+import got from "got";
+import { ipCheckService, ipRegex } from "../utils.js";
 
 /**
  * Ask ip check service for current machine external ip address
@@ -29,7 +29,7 @@ async function getCurrentAddress() {
   }
 }
 
-module.exports = async function middleware() {
+export default async function middleware() {
   const ip = await getCurrentAddress(); // get current machine ip address
 
   return (check) => {
@@ -47,4 +47,4 @@ module.exports = async function middleware() {
 
     return check;
   };
-};
+}

@@ -1,14 +1,15 @@
-const db = require("../db");
-const { getYesterdayISOString } = require("../utils");
+import { chain } from "lodash-es";
+import db from "../db.js";
+import { getYesterdayISOString } from "../utils.js";
 
 // returns all critical health check entries
-module.exports = (req, res) => {
+export default function critical(req, res) {
   const yesterday = getYesterdayISOString();
-  const entries = db
+  const entries = chain(db.data)
     .get("critical")
     .orderBy("date", "desc")
     .filter(({ date }) => date > yesterday)
     .value();
 
   res.send(entries);
-};
+}

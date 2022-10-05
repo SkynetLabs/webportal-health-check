@@ -1,12 +1,12 @@
-const ipCheckService = "whatismyip.akamai.com";
-const ipRegex = new RegExp(
+export const ipCheckService = "whatismyip.akamai.com";
+export const ipRegex = new RegExp(
   `^(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]\\d|\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]\\d|\\d)){3}$`
 );
 
 /**
  * Get the time between start and now in milliseconds
  */
-function calculateElapsedTime(start) {
+export function calculateElapsedTime(start) {
   const diff = process.hrtime(start);
 
   return Math.round((diff[0] * 1e9 + diff[1]) / 1e6); // msec
@@ -15,7 +15,7 @@ function calculateElapsedTime(start) {
 /**
  * Get the ISO string with yesterday's date set (- 24 hours)
  */
-function getYesterdayISOString() {
+export function getYesterdayISOString() {
   const date = new Date();
 
   date.setDate(date.getDate() - 1);
@@ -26,7 +26,7 @@ function getYesterdayISOString() {
 /**
  * Get response from response object if available
  */
-function getResponseContent(response) {
+export function getResponseContent(response) {
   try {
     return JSON.parse(response?.body || response?.text);
   } catch {
@@ -37,7 +37,7 @@ function getResponseContent(response) {
 /**
  * Ensures that the object serializes to JSON properly
  */
-function ensureValidJSON(object) {
+export function ensureValidJSON(object) {
   const replacer = (key, value) => (value === undefined ? "--undefined--" : value);
   const stringified = JSON.stringify(object, replacer);
 
@@ -47,7 +47,7 @@ function ensureValidJSON(object) {
 /**
  * isPortalModuleEnabled returns true if the given module is enabled
  */
-function isPortalModuleEnabled(module) {
+export function isPortalModuleEnabled(module) {
   return Boolean(process.env.PORTAL_MODULES) && process.env.PORTAL_MODULES.indexOf(module) !== -1;
 }
 
@@ -56,7 +56,7 @@ function isPortalModuleEnabled(module) {
  * - disable reason is set manually (non empty)
  * - DENY_PUBLIC_ACCESS env variable is set to true (server on takedown)
  */
-function getDisabledServerReason(manualDisabledReason) {
+export function getDisabledServerReason(manualDisabledReason) {
   // check if a flag that indicates that server should disable public traffic is enabled
   if (process.env.DENY_PUBLIC_ACCESS === "true") {
     const accessDeniedReason = "Server public access denied"; // generic reason message
@@ -71,7 +71,7 @@ function getDisabledServerReason(manualDisabledReason) {
 /**
  * Parse header string, to check whether it contains an object, return the header string otherwise
  */
-function parseHeaderString(header) {
+export function parseHeaderString(header) {
   try {
     return JSON.parse(header);
   } catch {
@@ -82,7 +82,7 @@ function parseHeaderString(header) {
 /**
  * Get response data from axios error response object
  */
-function getResponseErrorData(error) {
+export function getResponseErrorData(error) {
   return {
     // try response object first, otherwise use statusCode or status props
     statusCode: error.response?.statusCode ?? error.statusCode ?? error.status,
@@ -94,16 +94,3 @@ function getResponseErrorData(error) {
     ip: error?.response?.ip ?? null,
   };
 }
-
-module.exports = {
-  calculateElapsedTime,
-  getYesterdayISOString,
-  getResponseContent,
-  ensureValidJSON,
-  isPortalModuleEnabled,
-  getDisabledServerReason,
-  ipCheckService,
-  ipRegex,
-  parseHeaderString,
-  getResponseErrorData,
-};

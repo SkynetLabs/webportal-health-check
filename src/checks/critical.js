@@ -1,10 +1,10 @@
-const util = require("node:util");
-const got = require("got");
-const FormData = require("form-data");
-const { isEqual } = require("lodash");
-const tus = require("tus-js-client");
-const { calculateElapsedTime, getResponseErrorData, isPortalModuleEnabled } = require("../utils");
-const { genKeyPairAndSeed, getRegistryEntry, setRegistryEntry } = require("../utils-registry");
+import util from "node:util";
+import got from "got";
+import FormData from "form-data";
+import { isEqual } from "lodash-es";
+import tus from "tus-js-client";
+import { calculateElapsedTime, getResponseErrorData, isPortalModuleEnabled } from "../utils.js";
+import { genKeyPairAndSeed, getRegistryEntry, setRegistryEntry } from "../utils-registry.js";
 
 const exampleSkylink = "AACogzrAimYPG42tDOKhS3lXZD8YvlF8Q8R17afe95iV2Q";
 const exampleSkylinkBase32 = "000ah0pqo256c3orhmmgpol19dslep1v32v52v23ohqur9uuuuc9bm8";
@@ -15,7 +15,7 @@ const exampleSkylinkBase32 = "000ah0pqo256c3orhmmgpol19dslep1v32v52v23ohqur9uuuu
 const exampleResolverSkylink = "AQCExZYFmmc75OPgjPpHuF4WVN0pc4FX2p09t4naLKfTLw";
 
 // check that any relevant configuration is properly set in skyd
-async function skydConfigCheck() {
+export async function skydConfigCheck() {
   const time = process.hrtime();
   const data = { up: false };
 
@@ -39,7 +39,7 @@ async function skydConfigCheck() {
 }
 
 // check skyd for total number of workers on cooldown
-async function skydWorkersCooldownCheck() {
+export async function skydWorkersCooldownCheck() {
   const workersCooldownThreshold = 0.6; // set to 60% initially, can be increased later
   const time = process.hrtime();
   const data = { up: false };
@@ -72,7 +72,7 @@ async function skydWorkersCooldownCheck() {
 }
 
 // uploadCheck returns the result of uploading a sample file
-async function uploadCheck() {
+export async function uploadCheck() {
   const time = process.hrtime();
   const form = new FormData();
   const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
@@ -97,7 +97,7 @@ async function uploadCheck() {
 }
 
 // uploadTusCheck returns the result of uploading a sample file through tus endpoint
-async function uploadTusCheck() {
+export async function uploadTusCheck() {
   const time = process.hrtime();
   const headers = { "Skynet-Api-Key": process.env.ACCOUNTS_TEST_USER_API_KEY ?? "" };
   const payload = Buffer.from(new Date()); // current date to ensure data uniqueness
@@ -128,40 +128,40 @@ async function uploadTusCheck() {
 }
 
 // websiteCheck checks whether the main website is working
-async function websiteCheck() {
+export async function websiteCheck() {
   return genericAccessCheck("website", `https://${process.env.PORTAL_DOMAIN}`);
 }
 
 // downloadSkylinkCheck returns the result of downloading the hard coded link
-async function downloadSkylinkCheck() {
+export async function downloadSkylinkCheck() {
   const url = `https://${process.env.PORTAL_DOMAIN}/${exampleSkylink}`;
 
   return genericAccessCheck("skylink", url);
 }
 
 // downloadResolverSkylinkCheck returns the result of downloading an example resolver skylink
-async function downloadResolverSkylinkCheck() {
+export async function downloadResolverSkylinkCheck() {
   const url = `https://${process.env.PORTAL_DOMAIN}/${exampleResolverSkylink}`;
 
   return genericAccessCheck("resolver_skylink", url);
 }
 
 // skylinkSubdomainCheck returns the result of downloading the hard coded link via subdomain
-async function skylinkSubdomainCheck() {
+export async function skylinkSubdomainCheck() {
   const url = `https://${exampleSkylinkBase32}.${process.env.PORTAL_DOMAIN}`;
 
   return genericAccessCheck("skylink_via_subdomain", url);
 }
 
 // handshakeSubdomainCheck returns the result of downloading the skylink via handshake domain
-async function handshakeSubdomainCheck() {
+export async function handshakeSubdomainCheck() {
   const url = `https://note-to-self.hns.${process.env.PORTAL_DOMAIN}`;
 
   return genericAccessCheck("hns_via_subdomain", url);
 }
 
 // accountWebsiteCheck returns the result of accessing account dashboard website
-async function accountWebsiteCheck() {
+export async function accountWebsiteCheck() {
   if (!isPortalModuleEnabled("a")) return; // runs only when accounts are enabled
 
   const url = `https://account.${process.env.PORTAL_DOMAIN}/auth/login`;
@@ -170,7 +170,7 @@ async function accountWebsiteCheck() {
 }
 
 // registryWriteAndReadCheck writes to registry and immediately reads and compares the data
-async function registryWriteAndReadCheck() {
+export async function registryWriteAndReadCheck() {
   const time = process.hrtime();
   const data = { name: "registry_write_and_read", up: false };
   const { privateKey, publicKey } = await genKeyPairAndSeed();
@@ -202,7 +202,7 @@ async function registryWriteAndReadCheck() {
 }
 
 // directServerApiAccessCheck returns the basic server api check on direct server address
-async function directServerApiAccessCheck() {
+export async function directServerApiAccessCheck() {
   // skip if SERVER_DOMAIN is not set or it equals PORTAL_DOMAIN (single server portals)
   if (!process.env.SERVER_DOMAIN || process.env.SERVER_DOMAIN === process.env.PORTAL_DOMAIN) {
     return;
@@ -229,7 +229,7 @@ async function directServerApiAccessCheck() {
 }
 
 // accountHealthCheck returns the result of accounts service health checks
-async function accountHealthCheck(retries = 2) {
+export async function accountHealthCheck(retries = 2) {
   if (!isPortalModuleEnabled("a")) return; // runs only when accounts are enabled
 
   const time = process.hrtime();
@@ -255,7 +255,7 @@ async function accountHealthCheck(retries = 2) {
 }
 
 // blockerHealthCheck returns the result of blocker container health endpoint
-async function blockerHealthCheck(retries = 2) {
+export async function blockerHealthCheck(retries = 2) {
   if (!isPortalModuleEnabled("b")) return; // runs only when blocker is enabled
 
   const time = process.hrtime();
@@ -297,20 +297,3 @@ async function genericAccessCheck(name, url) {
 
   return { name, time: calculateElapsedTime(time), ...data };
 }
-
-module.exports = [
-  skydConfigCheck,
-  skydWorkersCooldownCheck,
-  uploadCheck,
-  uploadTusCheck,
-  websiteCheck,
-  downloadSkylinkCheck,
-  downloadResolverSkylinkCheck,
-  skylinkSubdomainCheck,
-  handshakeSubdomainCheck,
-  registryWriteAndReadCheck,
-  directServerApiAccessCheck,
-  accountHealthCheck,
-  accountWebsiteCheck,
-  blockerHealthCheck,
-];

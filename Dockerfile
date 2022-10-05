@@ -1,6 +1,6 @@
-FROM node:16.14.2-alpine
+FROM node:18.10.0-alpine
 
-RUN apk add --no-cache dnsmasq~=2
+RUN apk add --no-cache git~=2 dnsmasq~=2
 
 WORKDIR /usr/app
 
