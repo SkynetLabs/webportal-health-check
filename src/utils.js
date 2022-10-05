@@ -68,6 +68,33 @@ function getDisabledServerReason(manualDisabledReason) {
   return manualDisabledReason;
 }
 
+/**
+ * Parse header string, to check whether it contains an object, return the header string otherwise
+ */
+function parseHeaderString(header) {
+  try {
+    return JSON.parse(header);
+  } catch {
+    return header;
+  }
+}
+
+/**
+ * Get response data from axios error response object
+ */
+function getResponseErrorData(error) {
+  return {
+    // try response object first, otherwise use statusCode or status props
+    statusCode: error.response?.statusCode ?? error.statusCode ?? error.status,
+    // error message is always available
+    errorMessage: error.message,
+    // check error response body for additional error message context
+    errorResponseContent: getResponseContent(error.response),
+    // ip is not always available when no response was received
+    ip: error?.response?.ip ?? null,
+  };
+}
+
 module.exports = {
   calculateElapsedTime,
   getYesterdayISOString,
@@ -77,4 +104,6 @@ module.exports = {
   getDisabledServerReason,
   ipCheckService,
   ipRegex,
+  parseHeaderString,
+  getResponseErrorData,
 };

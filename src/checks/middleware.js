@@ -1,7 +1,10 @@
 const got = require("got");
 const { ipCheckService, ipRegex } = require("../utils");
 
-const getCurrentAddress = async () => {
+/**
+ * Ask ip check service for current machine external ip address
+ */
+async function getCurrentAddress() {
   // use serverip env variable when available (set via Dockerfile)
   if (process.env.serverip) {
     if (ipRegex.test(process.env.serverip)) return process.env.serverip;
@@ -24,13 +27,15 @@ const getCurrentAddress = async () => {
 
     return null;
   }
-};
+}
 
 module.exports = async function middleware() {
-  const ip = await getCurrentAddress();
+  const ip = await getCurrentAddress(); // get current machine ip address
 
   return (check) => {
-    // check only if current ip and check ip are provided
+    // ip comparison check middleware - executes only if current ip and check ip are provided
+    // reasoning: we had issues with health checks executing against different machines in cluster
+    // so we want to double check that we're running the checks against the machine that runs them
     if (ip && check.ip && check.ip !== ip) {
       check.up = false;
       check.errors = check.errors ?? [];
