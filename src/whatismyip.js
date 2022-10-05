@@ -5,8 +5,8 @@
  * Execution example: node src/whatismyip.js
  */
 
-const http = require("node:http");
-const { ipCheckService, ipRegex } = require("./utils");
+import http from "node:http";
+import { ipCheckService, ipRegex } from "./utils.js";
 
 const request = http.request({ host: ipCheckService }, (response) => {
   response.on("data", (data) => {

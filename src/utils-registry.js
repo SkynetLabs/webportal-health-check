@@ -7,12 +7,14 @@
  * source: https://github.com/SkynetLabs/skynet-js/blob/master/src/registry.ts
  */
 
-const { randomBytes } = require("node:crypto");
-const { blake2bFinal, blake2bInit, blake2bUpdate } = require("blakejs");
-const got = require("got");
-const pbkdf2Hmac = require("pbkdf2-hmac");
-const { sign } = require("tweetnacl");
-const e = require("express");
+import { randomBytes } from "node:crypto";
+import blakejs from "blakejs";
+import got from "got";
+import pbkdf2Hmac from "pbkdf2-hmac";
+import tweetnacl from "tweetnacl";
+
+const { blake2bFinal, blake2bInit, blake2bUpdate } = blakejs;
+const { sign } = tweetnacl;
 
 /**
  * Converts a hex encoded string to a uint8 array.
@@ -147,7 +149,7 @@ function hashRegistryEntry(registryEntry, hashedDataKeyHex) {
 /**
  * Generates key pair and seed for signing skynet registry requests
  */
-async function genKeyPairAndSeed() {
+export async function genKeyPairAndSeed() {
   const seed = randomBytes(64).toString("hex");
   const derivedKey = await pbkdf2Hmac(seed, "", 1000, 32, "SHA-256");
   const { publicKey, secretKey } = sign.keyPair.fromSeed(new Uint8Array(derivedKey));
@@ -181,7 +183,7 @@ function toHexString(byteArray) {
  * @param publicKey - The user public key.
  * @param entry - The entry to set.
  */
-async function setRegistryEntry(privateKey, publicKey, entry) {
+export async function setRegistryEntry(privateKey, publicKey, entry) {
   const signature = sign.detached(hashRegistryEntry(entry, false), hexToUint8Array(privateKey));
   const json = {
     publickey: {
@@ -210,7 +212,7 @@ async function setRegistryEntry(privateKey, publicKey, entry) {
  * @param publicKey - The user public key.
  * @param dataKey - The key of the data to fetch for the given user.
  */
-async function getRegistryEntry(publicKey, dataKey) {
+export async function getRegistryEntry(publicKey, dataKey) {
   // send read request to /skynet/registry endpoint
   const endpoint = `https://${process.env.PORTAL_DOMAIN}/skynet/registry`;
   const { body: entry } = await got(
@@ -224,5 +226,3 @@ async function getRegistryEntry(publicKey, dataKey) {
   // return entry with skynet-js schema
   return { dataKey, data: hexToUint8Array(entry.data), revision: BigInt(entry.revision) };
 }
-
-module.exports = { genKeyPairAndSeed, getRegistryEntry, setRegistryEntry };

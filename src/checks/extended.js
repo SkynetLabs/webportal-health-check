@@ -1,9 +1,9 @@
-const got = require("got");
-const hasha = require("hasha");
-const { detailedDiff } = require("deep-object-diff");
-const { isEqual } = require("lodash");
-const { calculateElapsedTime, ensureValidJSON, getResponseContent, parseHeaderString } = require("../utils");
-const extendedChecks = require("../fixtures/extendedChecks.json");
+import got from "got";
+import hasha from "hasha";
+import { detailedDiff } from "deep-object-diff";
+import { isEqual } from "lodash-es";
+import { calculateElapsedTime, ensureValidJSON, getResponseContent, parseHeaderString } from "../utils.js";
+import extendedChecks from "../fixtures/extendedChecks.json" assert { type: "json" };
 
 /**
  *
@@ -110,6 +110,6 @@ async function executeExtendedCheck(name, expected, config = {}) {
   }
 }
 
-module.exports = extendedChecks.map((extendedCheck) => {
+export default extendedChecks.map((extendedCheck) => {
   return () => executeExtendedCheck(extendedCheck.name, extendedCheck.data, extendedCheck.config);
 });

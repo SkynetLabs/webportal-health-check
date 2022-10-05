@@ -1,7 +1,7 @@
-const { StatusCodes } = require("http-status-codes");
-const { sum, sumBy } = require("lodash");
-const db = require("../db");
-const { getDisabledServerReason } = require("../utils");
+import { StatusCodes } from "http-status-codes";
+import { chain, sum, sumBy } from "lodash-es";
+import db from "../db.js";
+import { getDisabledServerReason } from "../utils.js";
 
 /**
  * Get status code that should be returned in the API response.
@@ -33,7 +33,7 @@ function getStatusCode() {
  */
 function getAverageResponseTime() {
   // get most recent 10 successfull checks for the calculation
-  const sample = db
+  const sample = chain(db.data)
     .get("critical")
     .orderBy("date", "desc")
     .filter(({ checks }) => checks.every(({ up }) => up))
@@ -48,19 +48,19 @@ function getAverageResponseTime() {
  * Get one, most current critical entry
  */
 function getMostRecentCriticalEntry() {
-  return db.get("critical").orderBy("date", "desc").head().value();
+  return chain(db.data).get("critical").orderBy("date", "desc").head().value();
 }
 
 /**
  * Get the disabled flag state (manual portal disable)
  */
 function getDisabled() {
-  const manualDisabledReason = db.get("disabled").value();
+  const manualDisabledReason = db.data.disabled;
 
   return getDisabledServerReason(manualDisabledReason);
 }
 
-module.exports = (req, res) => {
+export default function index(req, res) {
   const statusCode = getStatusCode();
   const timeout = statusCode === StatusCodes.OK ? getAverageResponseTime() : 0;
 
@@ -75,4 +75,4 @@ module.exports = (req, res) => {
 
     res.status(statusCode).send({ disabled, entry });
   }, timeout);
-};
+}

@@ -1,6 +1,10 @@
-const express = require("express");
-const { isPortalModuleEnabled } = require("./utils");
-const db = require("./db");
+import express from "express";
+import { isPortalModuleEnabled, ipRegex } from "./utils.js";
+import db from "./db.js";
+import indexRoute from "./routes/index.js";
+import criticalRoute from "./routes/critical.js";
+import extendedRoute from "./routes/extended.js";
+import disabledRoute from "./routes/disabled.js";
 
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
@@ -34,16 +38,16 @@ server.use((req, res, next) => {
 
 // display current health check status (shows only failed checks if any)
 // note: response code will be 200 when status is up and 503 otherwise
-server.get("/health-check", require("./routes/index"));
+server.get("/health-check", indexRoute);
 
 // display critical checks (last 24 hours)
-server.get("/health-check/critical", require("./routes/critical"));
+server.get("/health-check/critical", criticalRoute);
 
 // display extended checks (last 24 hours)
-server.get("/health-check/extended", require("./routes/extended"));
+server.get("/health-check/extended", extendedRoute);
 
 // display information whether server is set to disabled
-server.get("/health-check/disabled", require("./routes/disabled"));
+server.get("/health-check/disabled", disabledRoute);
 
 // prepare express server configuration options
 const host = process.env.HOSTNAME || "0.0.0.0";
@@ -54,8 +58,6 @@ server.listen(port, host, (error) => {
   if (error) throw error;
 
   console.info(`Server listening at http://${host}:${port} (NODE_ENV: ${process.env.NODE_ENV})`);
-
-  const { ipRegex } = require("./utils");
 
   if (ipRegex.test(process.env.serverip)) {
     console.info(`Server public ip: ${process.env.serverip}`);
