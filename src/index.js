@@ -34,16 +34,16 @@ server.use((req, res, next) => {
 
 // display current health check status (shows only failed checks if any)
 // note: response code will be 200 when status is up and 503 otherwise
-server.get("/health-check", require("./api/index"));
+server.get("/health-check", require("./routes/index"));
 
 // display critical checks (last 24 hours)
-server.get("/health-check/critical", require("./api/critical"));
+server.get("/health-check/critical", require("./routes/critical"));
 
 // display extended checks (last 24 hours)
-server.get("/health-check/extended", require("./api/extended"));
+server.get("/health-check/extended", require("./routes/extended"));
 
 // display information whether server is set to disabled
-server.get("/health-check/disabled", require("./api/disabled"));
+server.get("/health-check/disabled", require("./routes/disabled"));
 
 // prepare express server configuration options
 const host = process.env.HOSTNAME || "0.0.0.0";
