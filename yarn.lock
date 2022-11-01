@@ -2307,9 +2307,10 @@ path-to-regexp@0.1.7:
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-0.1.7.tgz#df604178005f522f15eb4490e7247a1bfaa67f8c"
   integrity sha512-5DFkuoqlv1uYQKxy8omFBeJPQcdoE07Kv2sferDCrAq1ohOU+MSDswDIbnx3YAM60qIOnYa53wBhXW0EbMonrQ==
 
-"pbkdf2-hmac@https://github.com/juanelas/pbkdf2-hmac#3cdd22969f944ed47d77ba715677290c36ab1187":
-  version "1.0.4"
-  resolved "https://github.com/juanelas/pbkdf2-hmac#3cdd22969f944ed47d77ba715677290c36ab1187"
+pbkdf2-hmac@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/pbkdf2-hmac/-/pbkdf2-hmac-1.1.0.tgz#33d851be8e3f830255fd5e079411a6af6c9713ac"
+  integrity sha512-tHlR1BqnuRX5No63r1u4Ll0fSxXMvBHhJ5JjVeYf/9nPOhTclozaMNFTMGO8f2CUmm7K1pe55d51OvvxoAxKdA==
 
 picocolors@^1.0.0:
   version "1.0.0"
