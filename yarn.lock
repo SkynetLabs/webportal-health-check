@@ -2058,12 +2058,12 @@ lodash.uniqby@4.5.0:
     lodash._baseiteratee "~4.7.0"
     lodash._baseuniq "~4.6.0"
 
-lowdb@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/lowdb/-/lowdb-3.0.0.tgz#c10ab4e7eb86f1cbe255e35e60ffb0c6f42049e0"
-  integrity sha512-9KZRulmIcU8fZuWiaM0d5e2/nPnrFyXkeXVpqT+MJS+vgbgOf1EbtvgQmba8HwUFgDl1oeZR6XqEJnkJmQdKmg==
+lowdb@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/lowdb/-/lowdb-5.1.0.tgz#3d9f13522ea92e445348a7d455a69ce570c2f51d"
+  integrity sha512-OEysJ2S3j05RqehEypEv3h6EgdV4Y7LTq7LngRNqe1IxsInOm66/sa3fzoI6mmqs2CC+zIJW3vfncGNv2IGi3A==
   dependencies:
-    steno "^2.1.0"
+    steno "^3.0.0"
 
 lowercase-keys@^3.0.0:
   version "3.0.0"
@@ -2589,10 +2589,10 @@ statuses@2.0.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
 
-steno@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/steno/-/steno-2.1.0.tgz#05a9c378ce42ed04f642cda6fcb41787a10e4e33"
-  integrity sha512-mauOsiaqTNGFkWqIfwcm3y/fq+qKKaIWf1vf3ocOuTdco9XoHCO2AGF1gFYXuZFSWuP38Q8LBHBGJv2KnJSXyA==
+steno@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/steno/-/steno-3.0.0.tgz#212a11e8ef3646b610efc8953842f556fd0df28f"
+  integrity sha512-uZtn7Ht9yXLiYgOsmo8btj4+f7VxyYheMt8g6F1ANjyqByQXEE2Gygjgenp3otHH1TlHsS4JAaRGv5wJ1wvMNw==
 
 string-length@^4.0.1:
   version "4.0.2"
