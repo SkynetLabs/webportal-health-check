@@ -17,7 +17,7 @@
     "pbkdf2-hmac": "https://github.com/juanelas/pbkdf2-hmac#3cdd22969f944ed47d77ba715677290c36ab1187",
     "tus-js-client": "^3.0.1",
     "tweetnacl": "^1.0.3",
-    "yargs": "^17.6.0"
+    "yargs": "^17.7.1"
   },
   "devDependencies": {
     "jest": "^29.1.2",
